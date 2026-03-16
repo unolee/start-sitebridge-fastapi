@@ -1,4 +1,6 @@
-const BASE_URL = import.meta.env.DEV ? "http://localhost:4001" : "";
+const BASE_URL = import.meta.env.DEV
+  ? import.meta.env.VITE_API_URL || "http://localhost:4001"
+  : "";
 
 export async function fetchApi<T>(
   path: string,

@@ -12,7 +12,7 @@ app = FastAPI()
 # CORS for development
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173", "http://localhost:5174"],
+    allow_origins=["http://localhost:3000", "http://localhost:3001", "http://localhost:5173", "http://localhost:5174"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -40,6 +40,19 @@ def init_db():
             created_at TEXT DEFAULT (datetime('now'))
         )
     """)
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS welcome (
+            id INTEGER PRIMARY KEY,
+            message TEXT NOT NULL
+        )
+    """)
+    # Seed default welcome message
+    row = db.execute("SELECT COUNT(*) FROM welcome").fetchone()
+    if row[0] == 0:
+        db.execute(
+            "INSERT INTO welcome (id, message) VALUES (1, ?)",
+            ("Welcome to SiteBridge! 🚀 Your FastAPI + React app is up and running.",),
+        )
     db.commit()
     db.close()
 
@@ -50,7 +63,11 @@ init_db()
 # API routes
 @app.get("/api/hello")
 async def hello():
-    return {"message": "Hello from SiteBridge!", "timestamp": datetime.now().isoformat()}
+    db = get_db()
+    row = db.execute("SELECT message FROM welcome WHERE id = 1").fetchone()
+    db.close()
+    message = row["message"] if row else "Hello from SiteBridge!"
+    return {"message": message, "timestamp": datetime.now().isoformat()}
 
 
 @app.get("/api/items")
